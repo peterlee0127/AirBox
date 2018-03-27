@@ -21,10 +21,14 @@
  * Basic program to read the PMSA003
  * 
  */
+//SYSTEM_THREAD(ENABLED);
+  
+#if defined(ARDUINO) 
+SYSTEM_MODE(SEMI_AUTOMATIC); 
+#endif
 
 
 int incomingByte = 0; // for incoming serial data
-int refreshOLEDCount = 0;
 
 const int MAX_FRAME_LEN = 64;
 char frameBuf[MAX_FRAME_LEN];
@@ -61,13 +65,15 @@ struct PMSA003_framestruct {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);      // initialize serial communication
-  Serial1.begin(9600);
-}
+  Serial.println('program begin');
+}  
 
 void loop() {
+ 
    if (!PMSA003_read()) {
         delay(4000);
     }
+   
 }
 
 bool PMSA003_read() {
@@ -197,7 +203,6 @@ bool PMSA003_read() {
                         thisFrame.checksum, (calcChecksum == thisFrame.checksum ? "==" : "!="), calcChecksum);
                    
                     Serial.println(printbuf);
-                    Serial.println();
                   
                     
                     packetReceived = true;
