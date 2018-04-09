@@ -19,5 +19,25 @@ Temperature/Humidity(optional): [DHT11](https://www.adafruit.com/product/386) 5 
 
 Display(optional): [Seed OLED Display](http://wiki.seeed.cc/Grove-OLED_Display_0.96inch/) 15 USD
 
+
+## HTTP API
+```
+$ curl http://192.168.10.96
+
+{
+  "pm1.0": 12,
+  "pm2.5": 15,
+  "pm10": 15,
+  "ver": 151,
+  "error-code": 0,
+  "pass": true,
+  "temperature": 27,
+  "humidity": 36,
+  "SSID": "PeterAP",
+  "IP": "192.168.10.96",
+  "RSSI": -26
+}
+```
+
 ##Main Board
 [RedBear Duo](rededbear.cc) for WiFi/BLE.  25 USD
