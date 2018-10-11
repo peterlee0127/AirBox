@@ -39,7 +39,7 @@ $ curl http://192.168.10.96
 }
 ```
 
-##Main Board
+## Main Board
 [RedBear Duo](rededbear.cc) for WiFi/BLE.  25 USD.  
 Or any kind of development board.
 
