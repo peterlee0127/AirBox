@@ -1,36 +1,7 @@
-/*
-  WiFi Web Server LED Blink
-
- A simple web server that lets you blink an LED via the web.
- This sketch will print the IP address of your WiFi (once connected)
- to the Serial monitor. From there, you can open that address in a web browser
- to turn on and off the LED on pin 7.
-
- If the IP address of your WiFi is yourAddress:
- http://yourAddress/H turns the LED on
- http://yourAddress/L turns it off
-
- This example is written for a network using WPA encryption. For
- WEP or WPA, change the Wifi.begin() call accordingly.
-
- Circuit:
- * Origin for CC3200 WiFi LaunchPad or CC3100 WiFi BoosterPack
-   with TM4C or MSP430 LaunchPad
- * Modified for DUO Board
-
- created 25 Nov 2012
- by Tom Igoe
- modified 6 July 2014
- by Noah Luskey
- modified 1 DEC 2015
- by Jackson Lv
- */
-
-
 /* 
  * Defaultly disabled. More details: https://docs.particle.io/reference/firmware/photon/#system-thread 
  */
- //SYSTEM_THREAD(ENABLED);
+// SYSTEM_THREAD(ENABLED);
 
 /*
  * Defaultly disabled. If BLE setup is enabled, when the Duo is in the Listening Mode, it will de-initialize and re-initialize the BT stack.
@@ -54,6 +25,7 @@
 #if defined(ARDUINO) 
 SYSTEM_MODE(SEMI_AUTOMATIC); 
 #endif
+
 
 #include <Wire.h>
 #include <SeeedOLED.h>
@@ -244,10 +216,7 @@ bool PMSA003_read() {
                         thisFrame.checksum, (calcChecksum == thisFrame.checksum ? "==" : "!="), calcChecksum);
                    */
                     //Serial.println(printbuf);
-         
-                    Serial.println();
-                  
-                    
+             
                     packetReceived = true;
                     detectOff = 0;
                     inFrame = false;
@@ -269,14 +238,12 @@ void setup() {
   SeeedOled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
   SeeedOled.setPageMode();           //Set addressing mode to Page Mode
   SeeedOled.setTextXY(0,0); 
+  SeeedOled.putString("init..."); //Print the String
 
   dht.begin();
-
-  // attempt to connect to Wifi network:
-  Serial.print("Attempting to connect to Network named: ");
-  // print the network name (SSID);
-  Serial.println(ssid); 
   
+ printWifiStatus();
+
   // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
   WiFi.on();
   WiFi.setCredentials(ssid,password);
@@ -284,12 +251,9 @@ void setup() {
   
   while ( WiFi.connecting()) {
     // print dots while we wait to connect
-    Serial.print(".");
     delay(300);
   }
   
-  Serial.println("\nYou're connected to the network");
-  Serial.println("Waiting for an ip address");
   
   IPAddress localIP = WiFi.localIP();
   while (localIP[0] == 0) {
@@ -298,27 +262,26 @@ void setup() {
     delay(1000);
   }
 
-  Serial.println("\nIP Address obtained");
   
   // you're connected now, so print out the status  
   printWifiStatus();
 
   Serial.println("Starting webserver on port 80");
   server.begin();                           // start the web server on port 80
-  Serial.println("Webserver started!");
+
 }
 
 void DHT_read() {
    sensors_event_t temp_event;  
   dht.temperature().getEvent(&temp_event);
   if (isnan(temp_event.temperature)) {
-    Serial.println("Error reading temperature!");
+    //Serial.println("Error reading temperature!");
   }
   else {
-    Serial.print("Temperature: ");
-    Serial.print(temp_event.temperature);
+    //Serial.print("Temperature: ");
+    //Serial.print(temp_event.temperature);
     temperature = int(temp_event.temperature);
-    Serial.println(" *C");
+    //Serial.println(" *C");
   }
   // Get humidity event and print its value.
   dht.humidity().getEvent(&temp_event);
@@ -326,49 +289,26 @@ void DHT_read() {
     Serial.println("Error reading humidity!");
   }
   else {
-    Serial.print("Humidity: ");
-    Serial.print(temp_event.relative_humidity);
+    //Serial.print("Humidity: ");
+    //Serial.print(temp_event.relative_humidity);
     relative_humidity = int(temp_event.relative_humidity);
-    Serial.println("%");
+    //Serial.println("%");
   }
   
   }
 
 void loop() {
   int i = 0;
-  TCPClient client = server.available();   // listen for incoming clients
+  
   
    if (!PMSA003_read()) {
+        Serial.println('PMSA003 not ready, wait..');
         delay(4000);
     }
-
+    
     DHT_read();
 
-  if (client) {                             // if you get a client,
-    Serial.println("new client");           // print a message out the serial port
-    char buffer[150] = {0};                 // make a buffer to hold incoming data
-    while (client.connected()) {            // loop while the client's connected
-      if (client.available()) {             // if there's bytes to read from the client,
-        char c = client.read();             // read a byte, then
-        Serial.write(c);                    // print it out the serial monitor
-        if (c == '\n') {                    // if the byte is a newline character
-          // if the current line is blank, you got two newline characters in a row.
-          // that's the end of the client HTTP request, so send a response:
-          if (strlen(buffer) == 0) {
-            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
-            // and a content-type so the client knows what's coming, then a blank line:
-            client.println("HTTP/1.1 200 OK");
-            client.println("Content-type:text/html");
-            client.println();
-
-            // the content of the HTTP response follows the header:
-            /*
-            client.println("<html><head><title>RedBear Duo WiFi Web Server</title></head><body align=center>");
-            client.println("<h1 align=center><font color=\"blue\">Welcome to the Duo WiFi Web Server</font></h1>");
-            client.print("BLUE LED <button onclick=\"location.href='/H'\">HIGH</button>");
-            client.println(" <button onclick=\"location.href='/L'\">LOW</button><br>");
-*/
-           StaticJsonBuffer<200> jsonBuffer;
+              StaticJsonBuffer<200> jsonBuffer;
                     JsonObject &root = jsonBuffer.createObject();
                     root["pm1.0"] = thisFrame.concPM1_0_CF1;
                     root["pm2.5"] = thisFrame.concPM2_5_CF1;
@@ -393,13 +333,13 @@ void loop() {
 
                     root["SSID"] = WiFi.SSID();
                     root["IP"] = String(WiFi.localIP());
-                    root["RSSI"] = WiFi.RSSI();
+                    root["RSSI"] = int(WiFi.RSSI());
                      
-                    root.printTo(Serial);
-             
-              root.prettyPrintTo(client);
+                    root.printTo(Serial);        
+                    Serial.println();
+                    
 
-              if(refreshOLEDCount>=10){
+               if(refreshOLEDCount>=30){
                 refreshOLEDCount = 0;
                 SeeedOled.clearDisplay();         // Clear Display.
               }
@@ -427,7 +367,39 @@ void loop() {
 
               SeeedOled.setTextXY(7,0);        
               String ForthLine = WiFi.localIP();
-              SeeedOled.putString(ForthLine); //Print the String
+              SeeedOled.putString(ForthLine); //Print the String   if(refreshOLEDCount>=10){
+
+       
+  TCPClient client = server.available();   // listen for incoming clients
+  if (client) {                             // if you get a client,
+    Serial.println("new client");           // print a message out the serial port
+    char buffer[150] = {0};                 // make a buffer to hold incoming data
+    while (client.connected()) {            // loop while the client's connected
+      if (client.available()) {             // if there's bytes to read from the client,
+        char c = client.read();             // read a byte, then
+        Serial.write(c);                    // print it out the serial monitor
+        if (c == '\n') {                    // if the byte is a newline character
+          // if the current line is blank, you got two newline characters in a row.
+          // that's the end of the client HTTP request, so send a response:
+          if (strlen(buffer) == 0) {
+            // HTTP headers always start with a response code (e.g. HTTP/1.1 200 OK)
+            // and a content-type so the client knows what's coming, then a blank line:
+            client.println("HTTP/1.1 200 OK");
+            client.println("Content-type:text/html");
+            client.println();
+
+            // the content of the HTTP response follows the header:
+            /*
+            client.println("<html><head><title>RedBear Duo WiFi Web Server</title></head><body align=center>");
+            client.println("<h1 align=center><font color=\"blue\">Welcome to the Duo WiFi Web Server</font></h1>");
+            client.print("BLUE LED <button onclick=\"location.href='/H'\">HIGH</button>");
+            client.println(" <button onclick=\"location.href='/L'\">LOW</button><br>");
+
+             */
+             
+              root.prettyPrintTo(client);
+
+           
               
             // The HTTP response ends with another blank line:
             client.println();
@@ -448,7 +420,9 @@ void loop() {
     // close the connection:
     client.stop();
     Serial.println("client disonnected");
-  }
+    }
+    
+  
 }
 
 
@@ -472,26 +446,4 @@ void printWifiStatus() {
   Serial.println(ip);
 }
 
-// Origin source from https://github.com/MartyMacGyver/PMS7003-on-Particle/blob/master/pms7003-photon-demo-1/pms7003-photon-demo-1.ino
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-//  Demo: interfacing a Plantower PMS7003 air quality sensor to a Particle IoT microcontroller
-/*
-    Copyright (c) 2016 Martin F. Falatic
-    
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-    
-        http://www.apache.org/licenses/LICENSE-2.0
-    
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-/*
- * Basic program to read the PMSA003
- * 
- */
+

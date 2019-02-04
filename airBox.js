@@ -9,7 +9,7 @@ app.use(ctx => {
 });
 
 function update() {
-    request.get({url:'http://192.168.10.96/'}, function(err,httpResponse,body){
+    request.get({url:'http://192.168.10.213/'}, function(err,httpResponse,body){
 
         data = JSON.parse(body);
         data.time = new Date().toString();

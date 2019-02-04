@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title>Sensor Data</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    	var socket = io('https://air.peterlee0127.com');
+	socket.on('connection', function(socket){
+  	});
+	socket.on('data', function(msg){
+		document.getElementById("data").innerHTML = msg;
+		let json = JSON.parse(msg);
+		let keys = Object.keys(json);
+	//	document.getElementById("table").innerHTMl = String(keys);
+	});
+
+    </script>
+  </head>
+  <body>
+	<div id="table"></div>
+	<div id="data"></div>
+  </body>
+</html>
