@@ -79,9 +79,9 @@ struct PMSA003_framestruct {
 
 
 // your network name also called SSID
-char ssid[] = "PeterAP";
+char ssid[] = "WifiAP";
 // your network password
-char password[] = "peter810127";
+char password[] = "password";
 
 TCPServer server = TCPServer(80);
 
