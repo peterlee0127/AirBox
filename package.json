@@ -19,6 +19,6 @@
   "homepage": "https://github.com/peterlee0127/AirBox#readme",
   "dependencies": {
     "koa": "^2.5.0",
-    "request": "^2.85.0"
+    "request": "^2.88.2"
   }
 }
