@@ -25,23 +25,30 @@ app.use(ctx => {
 });
 
 function update() {
-    request.get({url:'http://192.168.10.213/'}, function(err,httpResponse,body){
+    request.get({url:'http://192.168.2.97/'}, function(err,httpResponse,body){
 	if(err){
 		return;
 	}else {
     
         data = JSON.parse(body);
-	if(data['pm2.5']>500){
-		return;
+        if(data['pm2.5']>400){
+            return;
+        }
+        data.time = new Date().toString();
+        if(data["IP"]){
+            delete data["IP"];
+        }
+        if(data["SSID"]) {
+            delete data["SSID"];
+        }
+        data = JSON.stringify(data).replace(/\r/g,"");	
+        if(io.engine.clientsCount>0) {
+            io.emit('data', data);
+        }
+	    console.log(data);
 	}
-	data.time = new Date().toString();
-	data = JSON.stringify(data).replace(/\r/g,"");	
-	if(io.engine.clientsCount>0) {
-		io.emit('data', data);
-	}
-	console.log(data);
-	}
-    })
+    
+    });
 }
 
 setInterval(update,10000);
