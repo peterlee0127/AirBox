@@ -5,7 +5,8 @@ const server = require('http').createServer(app.callback())
 const io = require('socket.io')(server)
 const request = require('request');
 const fs = require('fs');
-let data;
+const moment = require('moment');
+let data = {};
 
 
 io.on('connection', function(socket){
@@ -23,36 +24,43 @@ app.use(ctx => {
 		ctx.body = data;
 	}
 });
+function setData(data, ready){
+        data["time"] = moment().format();
+	data['ready'] = ready;
+	data = JSON.stringify(data).replace(/\r/g,"");
+	return data;
+}
 let i = 1;
 function update() {
     request.get({url:'http://192.168.2.97/'}, function(err,httpResponse,body){
+	data = {};
+	data = setData(data, false);
 	if(err){
-		return;
+
 	}else {
+		data = JSON.parse(body);
+		data = setData(data, true);
+		if(data['pm2.5']>400){
+			return;
+		}
+		if(data["IP"]){
+            		delete data["IP"];
+		}
+		if(data["SSID"]) {
+			delete data["SSID"];
+		}
 
-        data = JSON.parse(body);
-        if(data['pm2.5']>400){
-            return;
-        }
-        data.time = new Date().toString();
-        if(data["IP"]){
-            delete data["IP"];
-        }
-        if(data["SSID"]) {
-            delete data["SSID"];
-        }
-        data = JSON.stringify(data).replace(/\r/g,"");
-        if(io.engine.clientsCount>0) {
-            io.emit('data', data);
-        }
-	if(i%2==0) {
-		console.log(data);
-		i = 1;
-	}
-	else {
-		i = i + 1;
-	}
+		if(i%2==0) {
+			console.log(data);
+			i = 1;
+		}
+		else {
+			i = i + 1;
+		}
 
+	}
+	if(io.engine.clientsCount>0) {
+		io.emit('data', data);
 	}
     });
 }
